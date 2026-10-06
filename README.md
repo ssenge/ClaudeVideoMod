@@ -14,6 +14,7 @@ Every time Claude starts a turn, a pane opens beside the transcript and a video 
 - **Any yt-dlp source.** A single video, a playlist, a channel, a search (`ytsearch20:lofi`), or a direct `.mp4` / `.m3u8` URL.
 - **Real pixels.** Frames go to the terminal through the kitty graphics protocol, at playback speed, 30 times a second.
 - **Sound** through `ffplay`, no extra window.
+- **Stop / Play buttons** in the pane.
 - **Configurable** through `/config`. The default source is NASA's YouTube channel.
 
 ## Requirements
@@ -49,6 +50,8 @@ claude --plugin-dir ./ClaudeVideoMod/player
 | `/play` | arm the configured source |
 | `/play <url>` | arm another source for this session (`/play ytsearch20:jazz` works too) |
 | `/play off` | stop and disarm; closing the pane does the same |
+
+In the pane, **■ Stop** pauses the video and **▶ Play** resumes it. A pause holds across turns: the pane still opens while Claude works, so you can resume, until you press Play or run `/play`.
 
 ## Configuration
 

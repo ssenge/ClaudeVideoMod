@@ -19,6 +19,7 @@ let ready: Promise<void> | undefined // resolving `current`
 let offset = 0 // seconds of `current` already watched, so the next turn resumes there
 let startedAt = 0
 let isTurn = false
+let isPaused = false // the person pressed Stop; holds across turns until Play or /play
 let frame: string | undefined
 let isReady = false
 let children: HookStream<ProcessSpawnChunk, ProcessSpawnResult>[] = []
@@ -48,17 +49,15 @@ export const register: Register = (on, options) => {
 
   on('turn.start', async ($, e, next) => {
     isTurn = true
-    void playWhenReady($)
+    if (isPaused) await $.ui.open({ id: PANE, title: 'Player' })
+    else void playWhenReady($)
     return next(e)
   })
 
   on('turn.complete', async ($, e, next) => {
     isTurn = false
-    if (children.length > 0) {
-      offset += ((await $.clock.now()) - startedAt) / 1000
-      stop()
-      await $.ui.close({ id: PANE })
-    }
+    if (children.length > 0) await pause($)
+    if (source) await $.ui.close({ id: PANE })
     return next(e)
   })
 
@@ -70,7 +69,21 @@ export const register: Register = (on, options) => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e, next) => {
     if (e.surface !== 'terminal') return next(e) // Image is the terminal's element alone
-    const { Box, Text, Image } = $.ui.resolve(e)
+    const { Box, Text, Image, Button } = $.ui.resolve(e)
+    const label = <Text dimColor>{entries[index] ?? ''} · /play off disarms</Text>
+    if (isPaused) {
+      const resume = () => {
+        isPaused = false
+        $.ui.invalidate('ui.render')
+        return playWhenReady($)
+      }
+      return (
+        <Box flexDirection="column">
+          <Text dimColor>Paused at {Math.floor(offset / 60)}:{String(Math.floor(offset % 60)).padStart(2, '0')}</Text>
+          <Box gap={2}><Button key="play" variant="primary" onPress={resume}>▶ Play</Button>{label}</Box>
+        </Box>
+      )
+    }
     if (!frame || !isReady) return <Text dimColor>Buffering…</Text>
 
     const columns = Math.max(20, Math.min(160, e.props.bodyColumns))
@@ -78,7 +91,10 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         <Image key="view" source={{ file: frame, format: 'rgb', width: W, height: H }} columns={columns} rows={rows} alt="video (needs kitty or Ghostty)" />
-        <Text dimColor>{entries[index] ?? ''} · /play off disarms</Text>
+        <Box gap={2}>
+          <Button key="stop" onPress={async () => { isPaused = true; await pause($); $.ui.invalidate('ui.render') }}>■ Stop</Button>
+          {label}
+        </Box>
       </Box>
     )
   })
@@ -92,6 +108,7 @@ function arm($: EngineInterface, src: string) {
 
 function disarm() {
   stop()
+  isPaused = false
   source = undefined
   entries = []
   index = -1
@@ -131,10 +148,16 @@ async function scrape($: EngineInterface, page: string, pattern: string) {
   return [...new Set(links)].slice(0, 20)
 }
 
+// stops playback and keeps the position for the next start
+async function pause($: EngineInterface) {
+  offset += ((await $.clock.now()) - startedAt) / 1000
+  stop()
+}
+
 // starts once the current video is resolved, if a turn still runs and nothing plays yet
 async function playWhenReady($: EngineInterface) {
   await ready
-  if (ready && isTurn && children.length === 0) await start($)
+  if (ready && isTurn && !isPaused && children.length === 0) await start($)
 }
 
 async function start($: EngineInterface) {
