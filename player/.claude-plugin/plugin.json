@@ -1,0 +1,41 @@
+{
+  "name": "player",
+  "version": "0.3.0",
+  "description": "Plays videos from any yt-dlp source in a pane while Claude works",
+  "author": {
+    "name": "ssenge",
+    "url": "https://github.com/ssenge"
+  },
+  "repository": "https://github.com/ssenge/ClaudeVideoMod",
+  "keywords": [
+    "video",
+    "yt-dlp",
+    "ffmpeg",
+    "pane",
+    "mod"
+  ],
+  "userConfig": {
+    "source": {
+      "type": "string",
+      "title": "Video source",
+      "description": "Anything yt-dlp reads: a video, playlist or channel URL, or ytsearch20:<query>. Empty: nothing plays until /play <url>.",
+      "default": "https://www.youtube.com/@NASA/videos"
+    },
+    "pick": {
+      "type": "string",
+      "title": "Which video next",
+      "description": "newest: the source's order (a channel lists newest first); random: any of its first 20",
+      "options": [
+        "newest",
+        "random"
+      ],
+      "default": "newest"
+    },
+    "linkPattern": {
+      "type": "string",
+      "title": "Link pattern",
+      "description": "For pages yt-dlp cannot list (e.g. a site's 'newest' page): a regex matching the video links on that page. Empty: off.",
+      "default": ""
+    }
+  }
+}

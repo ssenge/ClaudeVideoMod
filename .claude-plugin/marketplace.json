@@ -1,0 +1,15 @@
+{
+  "name": "claude-video-mod",
+  "description": "A Claude Code mod that plays videos in a pane while Claude works",
+  "owner": {
+    "name": "ssenge",
+    "url": "https://github.com/ssenge"
+  },
+  "plugins": [
+    {
+      "name": "player",
+      "source": "./player",
+      "description": "Plays videos from any yt-dlp source in a pane while Claude works"
+    }
+  ]
+}
